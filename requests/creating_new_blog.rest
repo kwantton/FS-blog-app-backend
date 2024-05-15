@@ -1,0 +1,10 @@
+// https://fs-blog-app-backend-mongo.onrender.com/
+POST https://fs-blog-app-backend-mongo.onrender.com/api/blogs
+Content-Type: application/json
+
+{
+    "title":"moro :D",
+    "author":"Jaska Jokunen",
+    "url":"abcd",
+    "likes":"69"
+}
