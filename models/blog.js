@@ -39,7 +39,7 @@ const blogSchema = new mongoose.Schema({
 blogSchema.set('toJSON', {  // author and title should be ok, no need to convert them to something else?
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString()
-    returnedObject.likes = Number(returnedObject.number) // TO-DO: make sure the number becomes a number
+    returnedObject.likes = returnedObject.likes // TO-DO: make sure the number becomes a number
     returnedObject.url = returnedObject.url.toString() // TO-DO: check
     delete returnedObject._id // "Even though the _id property of Mongoose objects looks like a string, it is in fact an object. The toJSON method we defined transforms it into a string just to be safe. If we didn't make this change, it would cause more harm to us in the future once we start writing tests." https://fullstackopen.com/en/part3/saving_data_to_mongo_db#fetching-objects-from-the-database
     delete returnedObject.number // TO-DO: make sure this is ok

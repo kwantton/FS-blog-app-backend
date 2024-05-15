@@ -23,15 +23,15 @@ blogsRouter.post('/', (request, response, next) => {
   const body = request.body
 
   const blog = new Blog({
-    title: body.content,
-    likes: body.likes,
+    title: body.title,
+    likes: body.likes.toString(),
     url: body.url,
     author: body.author
   })
 
   blog.save()
     .then(savedBlog => {
-      response.json(savedBlog)
+      response.status(201).json(savedBlog) // 201 = created
     })
     .catch(error => next(error))
 })
@@ -39,7 +39,7 @@ blogsRouter.post('/', (request, response, next) => {
 blogsRouter.delete('/:id', (request, response, next) => {
   Blog.findByIdAndDelete(request.params.id)
     .then(() => {
-      response.status(204).end()
+      response.status(204).end() // 204 no content
     })
     .catch(error => next(error))
 })
