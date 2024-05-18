@@ -1,8 +1,8 @@
 const mongoose = require('mongoose') // mongodb (from npm install mongoose; mongodb atlas on the web = cloud.mongodb.com).
-
 mongoose.set('strictQuery', false)
 
-const url = process.env.MONGODB_URI // "It's not a good idea to hardcode the address of the database into the code, so instead the address of the database is passed to the application via the MONGODB_URI environment variable." This is stored in root/.env of the git c:
+const config = require('../utils/config') // IMPORTANT! NOTE! I REQUIRED THIS TO GET THE CORRECT url IN CASE OF TEST c:
+const url = config.MONGODB_URI // (1) IMPORTANT! NOTE! I FIXED THIS SO IT'S NO LONGER process.env.MONGODB_URI, since (!) in config (and package.json scripts!) we've established that if process.env.NODE_ENV === 'test', then we are using process.env.TEST_MONGODB_URI as config.MONGODB_URI (i.e., config.MONGODB_URI = process.env.TEST_MONGODB_URI), not MONGODB_URI = MONGODB_URI c: (2) older: "It's not a good idea to hardcode the address of the database into the code, so instead the address of the database is passed to the application via the MONGODB_URI environment variable." This is stored in root/.env of the git c:
 
 console.log('connecting to', url)
 mongoose.connect(url)
@@ -22,17 +22,16 @@ const blogSchema = new mongoose.Schema({
   },
   author: {
     type: String,
-    minLength: 1,
-    required: true
+    required: false // only title and url are necessary, as per ex. 4.12
   },
   url: {
     type: String,
-    minLength:1,
+    minLength:7,
     required: true
   },
   likes: {
-    type: Number,
-    required:true
+    type:Number,
+    default:0 // this is needed so that mongoose schema will fix a possibly missing/undefined number of likes
   }
 })
 

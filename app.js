@@ -1,3 +1,4 @@
+require('express-async-errors') // "import BEFORE you import your routes"
 const config = require('./utils/config')
 const express = require('express')
 const app = express()
