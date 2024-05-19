@@ -7,6 +7,7 @@ const blogsRouter = require('./controllers/blogs')
 const middleware = require('./utils/middleware')
 const usersRouter = require('./controllers/users') // https://fullstackopen.com/en/part4/user_administration
 const logger = require('./utils/logger')
+const loginRouter = require('./controllers/login') // https://fullstackopen.com/en/part4/token_authentication
 const mongoose = require('mongoose')
 
 mongoose.set('strictQuery', false)
@@ -26,6 +27,7 @@ app.use(express.static('dist')) // production build of the frontend is in 'dist'
 app.use(express.json())
 app.use(middleware.requestLogger)
 
+app.use('/api/login', loginRouter) // https://fullstackopen.com/en/part4/token_authentication
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter) // https://fullstackopen.com/en/part4/user_administration
 
