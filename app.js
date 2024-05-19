@@ -26,6 +26,7 @@ app.use(cors())
 app.use(express.static('dist')) // production build of the frontend is in 'dist'
 app.use(express.json())
 app.use(middleware.requestLogger)
+app.use(middleware.tokenExtractor) // as per 4.20, "use before all the routes"
 
 app.use('/api/login', loginRouter) // https://fullstackopen.com/en/part4/token_authentication
 app.use('/api/blogs', blogsRouter)

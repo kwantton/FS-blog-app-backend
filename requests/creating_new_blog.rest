@@ -1,10 +1,10 @@
 // https://fs-blog-app-backend-mongo.onrender.com/api/blogs
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjEzNzM3OH0.ebpCXYtzvx8Yl528j8V0EQg10AvNCtm-ZJrBcymAAhM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjE1MjgzNH0.dOB3BPRXEVpAoDFSSQIuv2Q_CgWCXTL8cG5cOnu13dY
 
 {
-    "title":"This blog belongs to Third Dude, but you should see someone else as the 'user' (author's info) for this blog!",
+    "title":"This blog was created using token auth!",
     "author":"Third Dude",
     "url":"abcdefgh",
     "likes":0,

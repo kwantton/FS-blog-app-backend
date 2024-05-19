@@ -3,14 +3,6 @@ const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user') // https://fullstackopen.com/en/part4/user_administration
 
-
-const getTokenFrom = request => {  
-  const authorization = request.get('authorization')   // "isolates the token from the authorization header"
-  if (authorization && authorization.startsWith('Bearer ')) {    
-    return authorization.replace('Bearer ', '')  // if authorization is ok with Bearer [token], then leave just the [token] there c:
-  }  
-  return null}
-
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({})
     .populate('user', {username:1, name:1})
@@ -31,16 +23,16 @@ blogsRouter.get('/:id', (request, response, next) => {
 
 blogsRouter.post('/', async (request, response) => {
   const body = request.body
-  console.log("getTokenFrom(request):", getTokenFrom(request)) // this is apparently ok, the problem is not here! It has a type of string
+  console.log("getTokenFrom(request):", request.token) // this is apparently ok, the problem is not here! It has a type of string
   console.log("process.env.SECRET:", process.env.SECRET)
-  console.log("are the token (above) and process.env.SECRET (above) deeply equal:", getTokenFrom(request) === process.env.SECRET)
+  console.log("are the token (above) and process.env.SECRET (above) deeply equal:", request.token === process.env.SECRET) // IF you're using requests/creating_new_blog.rest OR postman, it doesn't matter if the process.env.SECRET is correct (=matching to the one you send) - the only thing that matters is whether the one you send in the header matches to the one that the user gets upon login! c:
   // ^^ they are equal - so the problem is something else
   // THE PROBLEM WAS: nodemon c: - you have to (1) sign in with user x, then copy the token from the response (2) copy-paste that to
   // .env SECRET, then (3) copy-paste that in the Authorization: Bearer -header, AND NOT SAVE THROUGHOUT this or otherwise the session
   // will be messed up c:
-  // FOr example, as soon as I save this file (blog.js), nodemon will take over and restart the server -> no longer signed in -> token fails.
+  // For example, as soon as I save this file (blog.js), nodemon will take over and restart the server -> no longer signed in -> token fails.
 
-  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)  
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this checks if the two are equal, like the console.log above does
   //console.log("decodedToken:", decodedToken)
   if (!decodedToken.id) {    
     return response.status(401).json({ error: 'token invalid' })  
