@@ -10,6 +10,9 @@ const api = supertest(app)
 
 const Blog = require('../models/blog')
 
+const bcrypt = require('bcrypt') // https://fullstackopen.com/en/part4/user_administration
+const User = require('../models/user') // https://fullstackopen.com/en/part4/user_administration
+
 beforeEach(async () => {
 
     await Blog.deleteMany({}) // delete ALL, since '{}'
@@ -120,7 +123,7 @@ test('if "title" or "author" is missing from the POST request, 400 bad request w
 
   await api
   .post('/api/blogs')
-  .send(newBlogWithoutTitle) // did mongoose do its job and fix the missing likes to likes:0?
+  .send(newBlogWithoutTitle) // did mongoose do its job and default the missing likes property to "likes:0"?
   .expect(400)
   .expect('Content-Type', /application\/json/)
 
@@ -203,6 +206,135 @@ describe('updating of a blog´s number of likes', () => {
       .send(badBlogToUpdate)
       .expect(400)  
   }) */
+})
+
+describe('when there is initially one user in db', () => {
+  beforeEach(async () => {
+    await User.deleteMany({})
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+
+    await user.save()
+  })
+
+  test('creation succeeds with a fresh username', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      password: 'salainen',
+    }
+
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAtEnd = await helper.usersInDb()
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
+
+    const usernames = usersAtEnd.map(u => u.username)
+    assert(usernames.includes(newUser.username))
+  })
+
+  test('creation fails with proper statuscode and message if username already taken', async () => {
+    const usersAtStart = await helper.usersInDb()
+
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+      password: 'salainen',
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('expected `username` to be unique'))
+
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
+
+  test('creation of a new user with TOO SHORT a USERNAME will fail', async () => {
+    const username = 'gg' // the limit is 3 or longer, as per 4.16
+    const password = "pqoiwuerouiwqerpoiquweropiuqwer"
+    const name = "Matti Nykaenen"
+
+    const newUser = {
+      username,
+      name,
+      password
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+      assert(result.body.error.includes('User validation failed: username: Path `username` (`gg`) is shorter than the minimum allowed length (3).'))
+  })
+
+  test('creation of a new user WITHOUT a USERNAME will fail', async () => { // 4.16
+    const password = "pqoiwuerouiwqerpoiquweropiuqwer"
+    const name = "Matti Nykaenen"
+
+    const newUser = {
+      name,
+      password
+    }
+
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+      assert(result.body.error.includes('User validation failed: username: Path `username` is required.'))
+  })
+
+test('creation of a new user with TOO SHORT a PASSWORD will fail', async () => { // 4.16
+  const username = 'SomeDude' // the limit is 3 or longer, as per 4.16
+  const password = "12"
+  const name = "Matti Nykaenen"
+
+  const newUser = {
+    username,
+    name,
+    password
+  }
+
+  const result = await api
+    .post('/api/users')
+    .send(newUser)
+    .expect(400)
+    .expect('Content-Type', /application\/json/)
+
+    assert(result.body.error.includes('error: password is too short, minimum length is 3 characters'))
+})
+
+test('creation of a new user WITHOUT a PASSWORD will fail', async () => { // 4.16
+  const username = 'SomeDude' // the limit is 3 or longer, as per 4.16
+  const name = "Matti Nykaenen"
+
+  const newUser = {
+    username,
+    name
+  }
+
+  const result = await api
+    .post('/api/users')
+    .send(newUser)
+    .expect(400)
+    .expect('Content-Type', /application\/json/)
+
+    assert(result.body.error.includes('error: a password must be entered'))
+})
+
 })
 
 after(async () => {

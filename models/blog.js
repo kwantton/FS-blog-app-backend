@@ -32,6 +32,10 @@ const blogSchema = new mongoose.Schema({
   likes: {
     type:Number,
     default:0 // this is needed so that mongoose schema will fix a possibly missing/undefined number of likes
+  },
+  user: {    // https://fullstackopen.com/en/part4/user_administration
+    type: mongoose.Schema.Types.ObjectId,    
+    ref: 'User'  
   }
 })
 

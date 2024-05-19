@@ -1,4 +1,5 @@
 const Blog = require('../models/blog')
+const User = require('../models/user') // https://fullstackopen.com/en/part4/user_administration
 
 const initialBlogs = [
     {
@@ -28,6 +29,14 @@ const blogsInDb = async () => {
   return blogs.map(note => note.toJSON())
 }
 
+const usersInDb = async () => {
+  const users = await User.find({})
+  return users.map(u => u.toJSON())
+}
+
 module.exports = {
-  initialBlogs, nonExistingId, blogsInDb
+  initialBlogs, 
+  nonExistingId, 
+  blogsInDb, 
+  usersInDb
 }

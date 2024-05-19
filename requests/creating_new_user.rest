@@ -1,0 +1,9 @@
+// https://fs-blog-app-backend-mongo.onrender.com/api/users
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+    "username": "Third Dude",
+    "name": "Third Dude",
+    "password": "12345"
+}

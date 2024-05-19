@@ -1,0 +1,10 @@
+// https://fs-blog-app-backend-mongo.onrender.com/api/users
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+    "username": "12",
+    "name": "Lazy User",
+    "password": "aweigojawöiejgöoawijegöoiawjeg"
+}
+// username is less than 3 characters, should return error ""error": "User validation failed: username: Path `username` (`gg`) is shorter than the minimum allowed length (3).""

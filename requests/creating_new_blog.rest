@@ -1,10 +1,12 @@
-// https://fs-blog-app-backend-mongo.onrender.com/
-POST https://fs-blog-app-backend-mongo.onrender.com/api/blogs
+// https://fs-blog-app-backend-mongo.onrender.com/api/blogs
+POST http://localhost:3003/api/blogs
 Content-Type: application/json
 
 {
-    "title":"moro :D",
-    "author":"Jaska Jokunen",
-    "url":"abcd",
-    "likes":"69"
+    "title":"This blog belongs to Third Dude, but you should see someone else as the 'user' (author's info) for this blog!",
+    "author":"Third Dude",
+    "url":"abcdefgh",
+    "likes":"0",
+    "userId":"664a051cd232f160a65bb69d"
 }
+// userId has to be an existing one!!! So, check at // https://fs-blog-app-backend-mongo.onrender.com/api/users what you have created (using "creating_new_user.rest") - otherwise you'll get a 400 bad request c:
