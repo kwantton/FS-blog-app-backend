@@ -1,6 +1,7 @@
 const logger = require('./logger')
 const User = require('../models/user') // attempt at 4.22
 const Blog = require('../models/blog') // attempt at 4.22
+const { request } = require('../app')
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method)
@@ -23,25 +24,45 @@ const userExtractor = async (request, response, next) => {    // 4.22. I hope th
   //console.log("request.token:", request.token) // WORKS! I can't copy-paste here the jwt.verify from controllers/blogs, BECAUSE: THE PROBLEM WITH jwt (jason web token): jwt will instantly result in "error: token invalid" for all of the /api/blogs urls unless you have managed to magically log in BEFORE going there, which is atm impossible, since this middleware is automatically called (as a designated middleware to /api/blogs) to those urls
   //console.log("request.body", request.body) // body
   console.log("Hello from userExtractor (middleware)!")
-  console.log("request.url (the url of the blog to delete", request.url) // empty
+  
+  /** DELETE */
+  if (request.method === "DELETE") {
+  console.log("DELETE: request.url (the url of the blog to delete", request.url) // empty
   const url = request.url.toString().substring(1) // this gets rid of the "/" at the start
-  console.log("url", url)       // WHY URL? Because rest api, so this url is in fact the id of the blog
+  console.log("url:", url)       // WHY URL? Because rest api, so this url is in fact the id of the blog
   if(url) {
     const blog = await Blog.findById(url) // url is the id of the blog
     if(!blog) {
       response.status(400).send({ error: 'the blog you tried to delete could not be found based on id' })
     }
-    console.log("blog:", blog) // PROBLEM: null
-    const userId = blog.user
-    request.user = userId.toString()
-    console.log("request.user should be set successfully as:", request.user)
+    console.log("blog:", blog)
+    const userId = blog.user.toString()
+
+    console.log("CRITICAL: userId:", userId)
+    const user = await User.findById(userId) // ÄLÄ UNOHA AWAITIA!!!! AAAAAAAA
+
+    request.user = user
+    console.log("request.user is now successfully set:", request.user)
+    console.log("request.user.id should now have been set successfully as:", request.user.id.toString())
   } else { 
     const userId = null
-    request.user = userId
+    request.user = null
     console.log("request.user could not be set:", request.user)
   }
   console.log("Exiting userExtractor!")
-  next()
+  
+/** POST */  
+} else if (request.method === "POST") {
+  console.log("POST")
+  const body = request.body
+  const userId = body.userId.toString() // I looked at the request to see this included there, nice way to check its existence
+  //console.log("request:", request)
+  //console.log("body:", body)
+  console.log("userId:", userId)
+  const user = User.findById(userId)
+  request.user = user
+}
+next() // btw: the method can also be "GET", hence it's especially important to put next() here in the end
 }
 
 const unknownEndpoint = (request, response) => {

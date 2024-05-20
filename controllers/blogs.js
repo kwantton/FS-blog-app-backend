@@ -23,7 +23,7 @@ blogsRouter.get('/:id', (request, response, next) => {
 
 blogsRouter.post('/', async (request, response) => {
   const body = request.body
-  console.log("request.token:", request.token) // this is apparently ok, the problem is not here! It has a type of string
+  console.log("request.token:", request.token) // ok - now uses the request.token (middleware tokenExtractor)
   console.log("process.env.SECRET:", process.env.SECRET)
   console.log("are the token (above) and process.env.SECRET (above) deeply equal:", request.token === process.env.SECRET) // IF you're using requests/creating_new_blog.rest OR postman, it doesn't matter if the process.env.SECRET is correct (=matching to the one you send) - the only thing that matters is whether the one you send in the header matches to the one that the user gets upon login! c:
   // ^^ they are equal - so the problem is something else
@@ -37,7 +37,8 @@ blogsRouter.post('/', async (request, response) => {
   if (!decodedToken.id) {    
     return response.status(401).json({ error: 'token invalid' })  
   }  
-  const user = await User.findById(decodedToken.id)
+  // const user = await User.findById(decodedToken.id) // OLD - now you can use instead the request.user, thanks to the middleware userExtractor
+  const user = request.user
 
   // const user = await User.findById(body.userId) // this was used before token authentication was taken into use for posting new blogs https://fullstackopen.com/en/part4/user_administration
   // const users = await User.find({}) // as per 4.17. !!! if you try "User.findById({})" IT WILL BREAK THE FUNCTIONALITY OF CREATING A NEW BLOG. HOW? NO IDEA.
@@ -48,7 +49,7 @@ blogsRouter.post('/', async (request, response) => {
     likes: body.likes.toString(),
     url: body.url,
     author: body.author,
-    user:user.id // this would be firstUser.id as per 4.17 which requested to choose any user (the first one in this case). That, of course, makes no sense IRL! https://fullstackopen.com/en/part4/user_administration
+    user: request.user.id.toString() // this would be firstUser.id as per 4.17 which requested to choose any user (the first one in this case). That, of course, makes no sense IRL! https://fullstackopen.com/en/part4/user_administration
   })
 
   const savedBlog = await blog.save()
@@ -84,12 +85,11 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
     return response.status(400).json({ error: `you somehow managed to use a token with a nonexisting user's id. Congratulations! (in reality: error: the user id that was acquired through the token is missing from the database. Maybe someone has just deleted your account?)` })
   } 
   //console.log("targetBlog:", targetBlog)
-  const targetBlogAuthor = targetBlog.user
 
-  console.log("request.user", request.user)
-  console.log("targetBlogAuthorId", targetBlogAuthor)
+  console.log("request.user.id.toString()", request.user.id.toString())
+  console.log("targetBlog.user.toString()", targetBlog.user.toString())
 
-  if(!(request.user.toString() === targetBlogAuthor.toString())) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
+  if(!(request.user.id.toString() === targetBlog.user.toString())) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
     return response.status(401).json({ error: 'cannot delete another user`s blog' })
   } 
 
