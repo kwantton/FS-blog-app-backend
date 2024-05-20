@@ -27,9 +27,11 @@ app.use(express.static('dist')) // production build of the frontend is in 'dist'
 app.use(express.json())
 app.use(middleware.requestLogger)
 app.use(middleware.tokenExtractor) // as per 4.20, "use before all the routes"
+// app.use(middleware.userExtractor) // as per 4.22
 
 app.use('/api/login', loginRouter) // https://fullstackopen.com/en/part4/token_authentication
-app.use('/api/blogs', blogsRouter)
+//app.use('/api/blogs', middleware.userExtractor, blogsRouter) // as per 4.22; compare to the commented line above -this way, the userExtractor will only be usable here, at /api/blogs! See https://fullstackopen.com/en/part4/token_authentication#limiting-creating-new-notes-to-logged-in-users
+app.use('/api/blogs', blogsRouter) // as per 4.22; compare to the commented line above -this way, the userExtractor will only be usable here, at /api/blogs! See https://fullstackopen.com/en/part4/token_authentication#limiting-creating-new-notes-to-logged-in-users
 app.use('/api/users', usersRouter) // https://fullstackopen.com/en/part4/user_administration
 
 app.use(middleware.unknownEndpoint)

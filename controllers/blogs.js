@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken')
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user') // https://fullstackopen.com/en/part4/user_administration
+const User = require('../models/user')
 
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({})
@@ -59,12 +59,43 @@ blogsRouter.post('/', async (request, response) => {
   
 })
 
-blogsRouter.delete('/:id', (request, response, next) => {
-  Blog.findByIdAndDelete(request.params.id)
-    .then(() => {
-      response.status(204).end() // 204 no content
-    })
-    .catch(error => next(error))
+blogsRouter.delete('/:id', async (request, response) => { // 4.21
+  
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this worked in ".post" above
+  //console.log("decodedToken:", decodedToken)
+  
+  if (!decodedToken.id) {    
+    return response.status(401).json({ error: 'token invalid' }) // this is ok and works
+  }
+
+  const user = await User.findById(decodedToken.id)
+  //const blogs = await Blog.find({}) // DON'T FORGET AWAIT!!!! >:-(
+  //console.log("Blogs", blogs)  // ok now. Why not earlier? Anyways: if you go to http://localhost:3003/api/blogs/[existing_blog_id_here], you'll see that user id is property "user"
+  //const firstBlog = blogs[0] // DON'T FORGET AWAIT!!!! >:-(
+  //console.log("firstBlog:", firstBlog) // ok
+  //const firstBlogUser = firstBlog.user.toString()
+  //console.log("firstBlogUser:", firstBlogUser)
+
+  const targetBlog = await Blog.findById(request.params.id) // !! don't forget AWAIT !!
+  if(!targetBlog) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
+    return response.status(400).json({ error: `the blog that you tried to delete doesn't exist based on the blog id` })
+  } 
+  if(!user) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
+    return response.status(400).json({ error: `you somehow managed to use a token with a nonexisting user's id. Congratulations! (in reality: error: the user id that was acquired through the token is missing from the database. Maybe someone has just deleted your account?)` })
+  } 
+  //console.log("targetBlog:", targetBlog)
+  const targetBlogAuthor = targetBlog.user
+
+  //console.log("user.id", user.id)
+  //console.log("targetBlogAuthorId", targetBlogAuthor)
+
+  if(!(user.id.toString() === targetBlogAuthor.toString())) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
+    return response.status(401).json({ error: 'cannot delete another user`s blog' })
+  } 
+
+  await Blog.findByIdAndDelete(request.params.id) // og. Blog id!!
+  response.status(204).end() // 204 no content
+  
 })
 
 blogsRouter.put('/:id', (request, response, next) => {

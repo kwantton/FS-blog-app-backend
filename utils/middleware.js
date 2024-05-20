@@ -17,6 +17,17 @@ const tokenExtractor = (request, response, next) => {  // moved here as per 4.20
   next() // ok apparently - the idea is: call "next" middleware in any case, whether authorization is ok or not.
 }
 
+/*
+const userExtractor = (request, response, next) => {
+  const idkö = request.body.user
+  //const user = await User.findById(decodedToken.id)
+  //user.id
+
+  request.user = request.get
+  next()
+}
+*/
+
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }

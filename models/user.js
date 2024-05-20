@@ -1,5 +1,5 @@
 const mongoose = require('mongoose') // https://fullstackopen.com/en/part4/user_administration
-
+// for some reason, strictQuery is not set to False here - but seems to work...
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
