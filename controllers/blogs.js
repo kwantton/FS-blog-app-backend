@@ -38,7 +38,7 @@ blogsRouter.post('/', async (request, response) => {
     return response.status(401).json({ error: 'token invalid' })  
   }  
   // const user = await User.findById(decodedToken.id) // OLD - now you can use instead the request.user, thanks to the middleware userExtractor
-  const user = request.user // !!!! NB! REMEMBER! because the goddamn request.user itself is dependent on async/await (see utils/middleware/userExtractor), this is needed here also!!! :c
+  const user = request.user // !!!! NB! REMEMBER! you had forgotten to await in the middleware side -> awaiting here worked too! SO that's a possibility c:
   console.log("body:", body)
   console.log("user:", user)
 
@@ -84,7 +84,7 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
     return response.status(400).json({ error: `the blog that you tried to delete doesn't exist based on the blog id` })
   } 
   if(!request.user) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
-    return response.status(400).json({ error: `you somehow managed to use a token with a nonexisting user's id. Congratulations! (in reality: error: the user id that was acquired through the token is missing from the database. Maybe someone has just deleted your account?)` })
+    return response.status(400).json({ error: `you somehow managed to use a token with a nonexisting user's id. Congratulations! (for real though: error: the user id that was acquired through the token is missing from the database. Maybe someone just deleted your account?)` })
   } 
   //console.log("targetBlog:", targetBlog)
 
@@ -92,7 +92,7 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
   console.log("targetBlog.user.toString()", targetBlog.user.toString())
 
   if(!(request.user.id.toString() === targetBlog.user.toString())) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
-    return response.status(401).json({ error: 'cannot delete another user`s blog' })
+    return response.status(401).json({ error: 'cannot delete another user`s blog' }) // 401 = unauthorized
   } 
 
   await Blog.findByIdAndDelete(request.params.id) // og. Blog id!!

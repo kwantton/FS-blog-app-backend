@@ -63,7 +63,7 @@ const userExtractor = async (request, response, next) => {    // 4.22. I hope th
   //console.log("body:", body)
   console.log("userId:", userId)
   const user = await User.findById(userId)
-  request.user = user
+  request.user = user // this puts the new "user" property to the "request" object, so it can be used in ../controllers/blogs.js later! See app.js also, as that specifies where this middleware can be used, and at what point!
 }
 next() // btw: the method can also be "GET", hence it's especially important to put next() here in the end
 }

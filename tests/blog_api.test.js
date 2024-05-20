@@ -16,10 +16,14 @@ const User = require('../models/user') // https://fullstackopen.com/en/part4/use
 beforeEach(async () => {
 
     await Blog.deleteMany({}) // delete ALL, since '{}'
-
     const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
     const promiseArray = blogObjects.map(blog => blog.save())
     await Promise.all(promiseArray) // this waits for ALL of the promises to be resolved first -> only then will this .js continue further below with the actual tests!
+
+    await User.deleteMany({}) // delete ALL users
+    const passwordHash = await bcrypt.hash('sekret', 10) // so, the password is "sekret"
+    const rootUser = new User({ username: 'root', passwordHash, name:"root" })
+    await rootUser.save()
 })
 
 test('(1) blogs are returned as json (2) the number of blogs is correct', async () => {
@@ -46,17 +50,53 @@ test('unique identifier of each blog post is "id", never "_id"', async () => {
     assert.strictEqual(found_id, false)
 })
 
-test('a valid blog (i.e. includes title, author, url and likes) can be added', async () => {
+test('a valid blog (i.e. includes title, author, url, likes and username) can be added BY username root once root has logged in, token saved, and post of the new blog is made c:', async () => { // now we also have to include a userId c:
+    // remember: there's a single user "root" with pw "sekret" atm
+    // remember: without likes, unless you utilize mongoose here to set the default likes for you, posting a new blog won't work!
+    // remember to AWAIT for User.find({username:"root"})
+    // User.find({username:"root"}) will return a list!
+    
+    console.log("Hello from test 'a valid blog can be added'!")
 
-    const newBlog = {
-      title: 'Adding new blogs with full content makes life better! c:',
-      author: "Random Dude",
-      url: "www.hikipedia.fi",
-      likes: 69
+    const users = await api
+      .get('/api/users')
+    console.log("ALL USERS (get ./api/users, body):", users.body)
+
+    const mrRootList = await User.find({username:"root"})
+    const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
+    
+    console.log("mrRoot:", mrRoot)
+    console.log("mrRoot.id:", mrRoot.id)
+
+    const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
+    
+    const logInInfo = {
+      username: 'root',
+      password: 'sekret'
     }
 
+    // LOGGING IN AS root!!
+    const response = await api
+      .post('/api/login')
+      .send(logInInfo)
+      .expect(200) // login should be ok
+    
+    const token = response.body.token // works c:
+    //console.log("response:", response)
+    console.log("token (test):", token)
+    
+      const newBlog = {
+        title: 'Adding new blogs with full content makes life better! c:',
+        author: "root",
+        url: "www.hikipedia.fi",
+        likes: 0,
+        userId: mrRootId // this was used in ../requests/creating_new_blog.rest c:
+      }
+    
+    // ACTUALLY ADDING A NEW BLOG
     await api
       .post('/api/blogs')
+      .set('Authorization', 'Bearer ' + token.toString()) // https://www.npmjs.com/package/supertest for some fucked-up reason, "set" comes after "send". Yeah.
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -123,7 +163,7 @@ test('if "title" or "author" is missing from the POST request, 400 bad request w
 
   await api
   .post('/api/blogs')
-  .send(newBlogWithoutTitle) // did mongoose do its job and default the missing likes property to "likes:0"?
+  .send(newBlogWithoutTitle) 
   .expect(400)
   .expect('Content-Type', /application\/json/)
 
@@ -135,7 +175,7 @@ test('if "title" or "author" is missing from the POST request, 400 bad request w
 
   await api
   .post('/api/blogs')
-  .send(newBlogWithoutUrl) // did mongoose do its job and fix the missing likes to likes:0?
+  .send(newBlogWithoutUrl) 
   .expect(400)
   .expect('Content-Type', /application\/json/)
 })
@@ -189,8 +229,8 @@ describe('updating of a blog´s number of likes', () => {
     assert.strictEqual(ok, true)
   })
 
-  /**
-  test('fails with status code 400 bad request for a non-existing blog', async () => {
+  /** I never got this additional test to work, so it's commented out here. **
+  test('fails with status code 400 bad request for a non-existing blog', async () => { 
     const nonexistingBlogId = await helper.nonExistingId()
 
     const badBlogToUpdate = {
