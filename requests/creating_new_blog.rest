@@ -1,7 +1,7 @@
 // https://fs-blog-app-backend-mongo.onrender.com/api/blogs
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjIxNjYwOH0.6wWZWAtzsybzxanEwBNhL-grwSelbc-dFVxLhPzVWj4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjIyMDg1M30.N39RNZssuJzDEO_nHdYxZWcWVaCl1NJs0ICZ6DhT-bg
 
 {
     "title":"This blog #2 was ALSO created using token auth by Third Dude!",
