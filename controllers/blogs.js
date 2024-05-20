@@ -38,7 +38,7 @@ blogsRouter.post('/', async (request, response) => {
     return response.status(401).json({ error: 'token invalid' })  
   }  
   // const user = await User.findById(decodedToken.id) // OLD - now you can use instead the request.user, thanks to the middleware userExtractor
-  const user = await request.user // !!!! NB! REMEMBER! because the goddamn request.user itself is dependent on async/await (see utils/middleware/userExtractor), this is needed here also!!! :c
+  const user = request.user // !!!! NB! REMEMBER! because the goddamn request.user itself is dependent on async/await (see utils/middleware/userExtractor), this is needed here also!!! :c
   console.log("body:", body)
   console.log("user:", user)
 

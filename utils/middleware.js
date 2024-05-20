@@ -1,6 +1,6 @@
 const logger = require('./logger')
-const User = require('../models/user') // attempt at 4.22
-const Blog = require('../models/blog') // attempt at 4.22
+const User = require('../models/user') // at 4.22
+const Blog = require('../models/blog') // at 4.22. NOTE! If you try to use json web token here, AND use the jwt.verify here, it will instantly say "error: token invalid", unless you somehow magically succeed in logging in as a valid user when accessing /api/blogs etc! Tried that... didn't work - so the jwt side remains in /controllers/blogs.js as of now at least.
 const { request } = require('../app')
 
 const requestLogger = (request, response, next) => {
@@ -55,11 +55,14 @@ const userExtractor = async (request, response, next) => {    // 4.22. I hope th
 } else if (request.method === "POST") {
   console.log("POST")
   const body = request.body
+  if(!body) {
+    response.status(400).send({ error: `the blog you're trying to create has no body - bad request` })
+  }
   const userId = body.userId.toString() // I looked at the request to see this included there, nice way to check its existence
   //console.log("request:", request)
   //console.log("body:", body)
   console.log("userId:", userId)
-  const user = User.findById(userId)
+  const user = await User.findById(userId)
   request.user = user
 }
 next() // btw: the method can also be "GET", hence it's especially important to put next() here in the end

@@ -1,7 +1,7 @@
 // so, you need to be logged in, AND you should be able to delete only the blogs that YOU are the author of
 // https://fs-blog-app-backend-mongo.onrender.com/api/blogs
-DELETE http://localhost:3003/api/blogs/664b735289324299858b6ce9
+DELETE http://localhost:3003/api/blogs/664b73d9d4329820dc1b3ef1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjIyMDg1M30.N39RNZssuJzDEO_nHdYxZWcWVaCl1NJs0ICZ6DhT-bg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlRoaXJkIER1ZGUiLCJpZCI6IjY2NGEwNTFjZDIzMmYxNjBhNjViYjY5ZCIsImlhdCI6MTcxNjIyMTgyM30.JF3Sp8nF8jJO4AjqTeS91Roizhsq5UqnBGNrKKx3dnY
 
 // check at // https://fs-blog-app-backend-mongo.onrender.com/api/users what you have created (using "creating_new_user.rest") - otherwise you'll get a 400 bad request c:
