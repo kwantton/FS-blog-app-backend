@@ -1,4 +1,6 @@
 const logger = require('./logger')
+const User = require('../models/user') // attempt at 4.22
+const Blog = require('../models/blog') // attempt at 4.22
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method)
@@ -17,16 +19,28 @@ const tokenExtractor = (request, response, next) => {  // moved here as per 4.20
   next() // ok apparently - the idea is: call "next" middleware in any case, whether authorization is ok or not.
 }
 
-/*
-const userExtractor = (request, response, next) => {
-  const idkö = request.body.user
-  //const user = await User.findById(decodedToken.id)
-  //user.id
-
-  request.user = request.get
+const userExtractor = async (request, response, next) => {    // 4.22. I hope the async works???
+  //console.log("request.token:", request.token) // WORKS! I can't copy-paste here the jwt.verify from controllers/blogs, BECAUSE: THE PROBLEM WITH jwt (jason web token): jwt will instantly result in "error: token invalid" for all of the /api/blogs urls unless you have managed to magically log in BEFORE going there, which is atm impossible, since this middleware is automatically called (as a designated middleware to /api/blogs) to those urls
+  //console.log("request.body", request.body) // body
+  console.log("Hello from userExtractor (middleware)!")
+  console.log("request.url (the url of the blog to delete", request.url) // empty
+  const url = request.url.toString().substring(1) // this gets rid of the "/" at the start
+  console.log("url", url)       // WHY URL? Because rest api, so this url is in fact the id of the blog
+  if(url) {
+    const blog = await Blog.findById(url) // url is the id of the blog
+    if(!blog) {
+      response.status(400).send({ error: 'the blog you tried to delete could not be found based on id' })
+    }
+    console.log("blog:", blog) // PROBLEM: null
+    const userId = blog.user
+    request.user = userId
+  } else { 
+    const userId = null
+    request.user = userId
+  }
+  console.log("Exiting userExtractor!")
   next()
 }
-*/
 
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -52,4 +66,5 @@ module.exports = {
   tokenExtractor,
   unknownEndpoint,
   errorHandler,
+  userExtractor
 }

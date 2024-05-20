@@ -23,7 +23,7 @@ blogsRouter.get('/:id', (request, response, next) => {
 
 blogsRouter.post('/', async (request, response) => {
   const body = request.body
-  console.log("getTokenFrom(request):", request.token) // this is apparently ok, the problem is not here! It has a type of string
+  console.log("request.token:", request.token) // this is apparently ok, the problem is not here! It has a type of string
   console.log("process.env.SECRET:", process.env.SECRET)
   console.log("are the token (above) and process.env.SECRET (above) deeply equal:", request.token === process.env.SECRET) // IF you're using requests/creating_new_blog.rest OR postman, it doesn't matter if the process.env.SECRET is correct (=matching to the one you send) - the only thing that matters is whether the one you send in the header matches to the one that the user gets upon login! c:
   // ^^ they are equal - so the problem is something else
@@ -54,7 +54,6 @@ blogsRouter.post('/', async (request, response) => {
   const savedBlog = await blog.save()
   user.blogs = user.blogs.concat(savedBlog._id) // https://fullstackopen.com/en/part4/user_administration
   await user.save()
-
   response.status(201).json(savedBlog) // 201 = created
   
 })
