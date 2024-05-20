@@ -194,7 +194,7 @@ test('if "likes" property is missing from the POST request, it will default to 0
         title: 'No likes yet',
         author: "root",
         url: "www.givemelikes.com"
-        //userId: mrRootId // this was used in ../requests/creating_new_blog.rest c:
+        //userId: mrRootId THIS WILL BE ADDED ONLY AFTER THE MONGOOSE TREATMENT BELOW
         // likes: undefined! Yet Fret Not: the mongoose blogSchema (blog.js) should fix this by using default value of 0 for the "likes" property
       } 
 
@@ -223,47 +223,92 @@ test('if "likes" property is missing from the POST request, it will default to 0
       assert.strictEqual(found, true) // are there 0 likes?
   })
 
-test('if "title" or "author" is missing from the POST request, 400 bad request will be received', async () => {
+/** EXTRA: I FIXED THIS TOO. Just requires login by someone legit and awesome first. **/
+test('if "title" or "url" is missing from the POST request, 400 bad request will be received', async () => {
+  const mrRootList = await User.find({username:"root"})
+  const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
+  const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
+    
+  const logInInfo = {
+    username: 'root',
+    password: 'sekret'
+  }
 
-  const newBlogWithoutAuthor = {
-      title: 'No likes yet',
+  // LOGGING IN AS root!!
+  const response = await api
+    .post('/api/login')
+    .send(logInInfo)
+    .expect(200) // login should be ok
+  
+  const token = response.body.token // works c:
+    
+    // MISSING TITLE  
+  const newBlogWithoutTitle = {
+      author: "root",
       url: "www.givemelikes.com",
-      likes:0
-    }
+      likes:0,
+      userId:mrRootId
+    } 
 
   await api
     .post('/api/blogs')
-    .send(newBlogWithoutAuthor) // did mongoose do its job and fix the missing likes to likes:0?
-    .expect(201)
+    .set('Authorization', 'Bearer ' + token.toString()) // doesn't matter if send or set is first, BUT post has to be first
+    .send(newBlogWithoutTitle) // did mongoose do its job and fix the missing likes to likes:0? NOTE! THIS NO LONGER WORKS AFTER THE USER AUTHENTICATION CHAPTERS; would require sign-in first, as is done in two tests "a valid blog..." near top of this .js file c:
+    .expect(400) // shouldn't work. Or 201...??
     .expect('Content-Type', /application\/json/)
 
-  const newBlogWithoutTitle = {
-    author: "Random Dude",
-    url: "www.givemelikes.com",
-    likes:0
-  }
-
-  await api
-  .post('/api/blogs')
-  .send(newBlogWithoutTitle) 
-  .expect(400)
-  .expect('Content-Type', /application\/json/)
-
+  // MISSING URL
   const newBlogWithoutUrl = {
-    title: 'No likes yet',
-    author: "Random Dude",
-    likes:0
-  }
+    title: "I'm missing an url... :c",
+    author: "root",
+    likes:0,
+    userId:mrRootId
+  } 
 
   await api
-  .post('/api/blogs')
-  .send(newBlogWithoutUrl) 
-  .expect(400)
-  .expect('Content-Type', /application\/json/)
-})
+    .post('/api/blogs')
+    .set('Authorization', 'Bearer ' + token.toString()) // doesn't matter if send or set is first, BUT post has to be first
+    .send(newBlogWithoutUrl) 
+    .expect(400)
+    .expect('Content-Type', /application\/json/)
 
-describe('deletion of a blog', () => {
-  test('succeeds with status code 204 if id is valid', async () => {
+    // MISSING AUTHOR
+  const newBlogWithoutAuthor = {
+    title: "I'm missing an author! Peculiar...",
+    likes:0,
+    url:"www.fjaöoweijgöoawije.com",
+    userId:mrRootId
+  } 
+
+  await api
+    .post('/api/blogs')
+    .set('Authorization', 'Bearer ' + token.toString()) // doesn't matter if send or set is first, BUT post has to be first
+    .send(newBlogWithoutAuthor) 
+    .expect(201) // this yields 201 since it was ok to have a missing author! c:
+    .expect('Content-Type', /application\/json/)
+  })
+
+/** THIS HAS BROKEN AFTER AUTHENTICATION FEATURES' ADDITION - WOULD REQUIRE LOG-IN FIRST**/
+  describe('deletion of a blog', () => {
+  test('succeeds with status code 204 "no content" if id is valid', async () => {
+    
+    /*const mrRootList = await User.find({username:"root"})
+  const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
+  const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
+    
+  const logInInfo = {
+    username: 'root',
+    password: 'sekret'
+  }
+
+  // LOGGING IN AS root!!
+  const response = await api
+    .post('/api/login')
+    .send(logInInfo)
+    .expect(200) // login should be ok
+  
+  const token = response.body.token // works c: */
+
     const blogsAtStart = await helper.blogsInDb()
     const blogToDelete = blogsAtStart[0]
     //console.log("blogToDelete:", blogToDelete)
