@@ -45,10 +45,17 @@ blogsRouter.post('/', async (request, response) => {
   // const user = await User.findById(body.userId) // this was used before token authentication was taken into use for posting new blogs https://fullstackopen.com/en/part4/user_administration
   // const users = await User.find({}) // as per 4.17. !!! if you try "User.findById({})" IT WILL BREAK THE FUNCTIONALITY OF CREATING A NEW BLOG. HOW? NO IDEA.
   // const firstUser = users[0] // as per 4.17
+  
+  let likes
+  if(!body.likes) {
+    likes = 0
+    } else {
+      likes = body.likes
+    }
 
   const blog = new Blog({
     title: body.title,
-    likes: body.likes.toString(),
+    likes: likes,
     url: body.url,
     author: body.author,
     user: user.id.toString() // this would be firstUser.id as per 4.17 which requested to choose any user (the first one in this case). That, of course, makes no sense IRL! https://fullstackopen.com/en/part4/user_administration
@@ -62,7 +69,7 @@ blogsRouter.post('/', async (request, response) => {
 })
 
 blogsRouter.delete('/:id', async (request, response) => { // 4.21
-  console.log("Hello from blogsRouter.delete!")
+  //console.log("Hello from blogsRouter.delete!")
   const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this worked in ".post" above
   //console.log("decodedToken:", decodedToken)
   
@@ -70,7 +77,7 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
     return response.status(401).json({ error: 'token invalid' }) // this is ok and works
   }
 
-  //const user = await User.findById(decodedToken.id) // OLD. THIS SHOULD NOW BE ACCESSIBLE THROUGH "request.user" thanks to the middleware
+  //const user = await User.findById(decodedToken.id) // OLD. THIS IS NOW BE ACCESSIBLE through "request.user" using the middlew. userExtractor c:
 
   //const blogs = await Blog.find({}) // DON'T FORGET AWAIT!!!! >:-(
   //console.log("Blogs", blogs)  // ok now. Why not earlier? Anyways: if you go to http://localhost:3003/api/blogs/[existing_blog_id_here], you'll see that user id is property "user"
@@ -88,8 +95,8 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
   } 
   //console.log("targetBlog:", targetBlog)
 
-  console.log("request.user.id.toString()", request.user.id.toString())
-  console.log("targetBlog.user.toString()", targetBlog.user.toString())
+  //console.log("request.user.id.toString()", request.user.id.toString())
+  //console.log("targetBlog.user.toString()", targetBlog.user.toString())
 
   if(!(request.user.id.toString() === targetBlog.user.toString())) { // "user.id" I got from http://localhost:3003/api/blogs, and the "request.params.id" is copy-pasted from below
     return response.status(401).json({ error: 'cannot delete another user`s blog' }) // 401 = unauthorized
@@ -98,7 +105,7 @@ blogsRouter.delete('/:id', async (request, response) => { // 4.21
   await Blog.findByIdAndDelete(request.params.id) // og. Blog id!!
   response.status(204).end() // 204 no content
 
-  console.log("Exiting blogsRouter.delete!")
+  //console.log("Exiting blogsRouter.delete!")
   
 })
 

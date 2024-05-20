@@ -55,18 +55,18 @@ test('a valid blog (i.e. includes title, author, url, likes and username) can be
     // remember: without likes, unless you utilize mongoose here to set the default likes for you, posting a new blog won't work!
     // remember to AWAIT for User.find({username:"root"})
     // User.find({username:"root"}) will return a list!
-    
-    console.log("Hello from test 'a valid blog can be added'!")
+
+    //console.log("Hello from test 'a valid blog can be added'!")
 
     const users = await api
       .get('/api/users')
-    console.log("ALL USERS (get ./api/users, body):", users.body)
+    //console.log("ALL USERS (get ./api/users, body):", users.body)
 
     const mrRootList = await User.find({username:"root"})
     const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
     
-    console.log("mrRoot:", mrRoot)
-    console.log("mrRoot.id:", mrRoot.id)
+    //console.log("mrRoot:", mrRoot)
+    //console.log("mrRoot.id:", mrRoot.id)
 
     const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
     
@@ -83,7 +83,7 @@ test('a valid blog (i.e. includes title, author, url, likes and username) can be
     
     const token = response.body.token // works c:
     //console.log("response:", response)
-    console.log("token (test):", token)
+    //console.log("token (test):", token)
     
       const newBlog = {
         title: 'Adding new blogs with full content makes life better! c:',
@@ -96,7 +96,7 @@ test('a valid blog (i.e. includes title, author, url, likes and username) can be
     // ACTUALLY ADDING A NEW BLOG
     await api
       .post('/api/blogs')
-      .set('Authorization', 'Bearer ' + token.toString()) // https://www.npmjs.com/package/supertest for some fucked-up reason, "set" comes after "send". Yeah.
+      .set('Authorization', 'Bearer ' + token.toString()) // doesn't matter if send or set is first, BUT post has to be first
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -109,21 +109,103 @@ test('a valid blog (i.e. includes title, author, url, likes and username) can be
     assert(titles.includes('Adding new blogs with full content makes life better! c:')) 
 })
 
-test('if "likes" property is missing from the POST request, it will default to 0', async () => {
 
-    const newBlogWithoutLikes = {
+test('a valid blog (i.e. includes title, author, url, likes and username) can NOT be added BY username root once root has logged in, token saved, and post of the new blog is made using a WRONG token c:', async () => { // now we also have to include a userId c:
+  // remember: there's a single user "root" with pw "sekret" atm
+  // remember: without likes, unless you utilize mongoose here to set the default likes for you, posting a new blog won't work!
+  // remember to AWAIT for User.find({username:"root"})
+  // User.find({username:"root"}) will return a list!
+  
+  //console.log("Hello from test 'a valid blog can be added'!")
+
+  const users = await api
+    .get('/api/users')
+  //console.log("ALL USERS (get ./api/users, body):", users.body)
+
+  const mrRootList = await User.find({username:"root"})
+  const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
+  
+  //console.log("mrRoot:", mrRoot)
+  //console.log("mrRoot.id:", mrRoot.id)
+
+  const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
+  
+  const logInInfo = {
+    username: 'root',
+    password: 'sekret'
+  }
+
+  // LOGGING IN AS root!!
+  const response = await api
+    .post('/api/login')
+    .send(logInInfo)
+    .expect(200) // login should be ok
+  
+  const token = response.body.token // works c:
+  //console.log("response:", response)
+  //console.log("token (test):", token)
+  
+    const newBlog = {
+      title: 'Adding new blogs with full content makes life better! c:',
+      author: "root",
+      url: "www.hikipedia.fi",
+      likes: 0,
+      userId: mrRootId // this was used in ../requests/creating_new_blog.rest c:
+    }
+  
+  // ACTUALLY ADDING A NEW BLOG
+  await api
+    .post('/api/blogs')
+    .set('Authorization', 'Bearer ' + token.toString() + "WRONG_BULLSHIT_HERE!") // https://www.npmjs.com/package/supertest for some fucked-up reason, "set" comes after "send". Yeah.
+    .send(newBlog)
+    .expect(401) // 401 unauthorized
+    .expect('Content-Type', /application\/json/)
+
+  const blogsAtEnd = await helper.blogsInDb()
+  assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length) // length shouldn't have changed at all since the token was wrong
+
+  const titles = blogsAtEnd.map(blog => blog.title)
+  //console.log("contents:", titles)
+  assert(!titles.includes('Adding new blogs with full content makes life better! c:')) // should include the new blog
+})
+
+
+/**  BONUS: I fixed this test below after authentication exercises, which originally broke this. **/
+test('if "likes" property is missing from the POST request, it will default to 0', async () => { // this has broken down after user auth came into picture; would require login as an existing user, THEN making a blog post.
+    
+  const mrRootList = await User.find({username:"root"})
+  const mrRoot = mrRootList[0] // the f****** ".find" apparently returns a list everytime, that's why
+  const mrRootId = mrRoot.id // this is the string version, the non-clucked-up one
+    
+    const logInInfo = {
+      username: 'root',
+      password: 'sekret'
+    }
+
+    // LOGGING IN AS root!!
+    const response = await api
+      .post('/api/login')
+      .send(logInInfo)
+      .expect(200) // login should be ok
+    
+    const token = response.body.token // works c:
+    
+      const newBlogWithoutLikes = {
         title: 'No likes yet',
-        author: "Random Dude",
+        author: "root",
         url: "www.givemelikes.com"
+        //userId: mrRootId // this was used in ../requests/creating_new_blog.rest c:
         // likes: undefined! Yet Fret Not: the mongoose blogSchema (blog.js) should fix this by using default value of 0 for the "likes" property
-      }
+      } 
 
     const newMongooseBlog = new Blog(newBlogWithoutLikes) // since this is what WILL happen in the actual app by the Blog schema c:
     const fixedBlog = newMongooseBlog.toJSON() // for .send below however, an actual JSON is needed c:
+    fixedBlog.userId = mrRootId // THIS IS NEEDED NOW (for auth checking!...). This was used in ../requests/creating_new_blog.rest c:
   
       await api
         .post('/api/blogs')
-        .send(fixedBlog) // did mongoose do its job and fix the missing likes to likes:0?
+        .set('Authorization', 'Bearer ' + token.toString()) // doesn't matter if send or set is first, BUT post has to be first
+        .send(fixedBlog) // did mongoose do its job and fix the missing likes to likes:0? NOTE! THIS NO LONGER WORKS AFTER THE USER AUTHENTICATION CHAPTERS; would require sign-in first, as is done in two tests "a valid blog..." near top of this .js file c:
         .expect(201)
         .expect('Content-Type', /application\/json/)
     
