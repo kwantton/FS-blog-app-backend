@@ -33,10 +33,12 @@ const userExtractor = async (request, response, next) => {    // 4.22. I hope th
     }
     console.log("blog:", blog) // PROBLEM: null
     const userId = blog.user
-    request.user = userId
+    request.user = userId.toString()
+    console.log("request.user should be set successfully as:", request.user)
   } else { 
     const userId = null
     request.user = userId
+    console.log("request.user could not be set:", request.user)
   }
   console.log("Exiting userExtractor!")
   next()
