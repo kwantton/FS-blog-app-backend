@@ -26,16 +26,16 @@ blogsRouter.post('/', async (request, response) => {
   /*
   console.log("request.token:", request.token) // ok - now uses the request.token (middleware tokenExtractor)
   console.log("process.env.SECRET:", process.env.SECRET)
-  console.log("are the token (above) and process.env.SECRET (above) triple equal:", request.token === process.env.SECRET) // IF you're using requests/creating_new_blog.rest OR postman, it doesn't matter if the process.env.SECRET is correct (=matching to the one you send) - the only thing that matters is whether the one you send in the header matches to the one that the user gets upon login! c:
+  console.log("are the token (above) and process.env.SECRET (above) triple equal:", request.token === process.env.SECRET) // also when you're using requests/creating_new_blog.rest OR postman, it doesn't matter WHAT the process.env.SECRET is! - the only thing that matters is whether the token you send in the header (bearer) matches to the one that the user receives in the response upon login!
   */
 
-  // ^^ they are equal - so the problem is something else
-  // THE PROBLEM WAS: nodemon c: - you have to (1) sign in with user x, then copy the token from the response (2) copy-paste that to
-  // .env SECRET, then (3) copy-paste that in the Authorization: Bearer -header, AND NOT SAVE THROUGHOUT this or otherwise the session
+  // the above is useless of course - the SECRET key is the secret key, in asymmetric crypting of the token (public key, I guess).
+  // THE PROBLEM WAS: nodemon c: - you have to (1) sign in with user x, then copy the token from the response 
+  // then (2) copy-paste that in the Authorization: Bearer -header, AND NOT SAVE THROUGHOUT this or otherwise the session
   // will be messed up c:
   // For example, as soon as I save this file (blog.js), nodemon will take over and restart the server -> no longer signed in -> token fails.
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this DOES NOT check if the two are equal, it apparently just uses the SECRET to somehow verify the token. So .env.SECRET does NOT have to equal it c:
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this DOES NOT check if the two are equal, it apparently just uses the SECRET to crypt the token. So .env.SECRET does NOT have to equal anything else, of course
   //console.log("decodedToken:", decodedToken)
   if (!decodedToken.id) {    
     return response.status(401).json({ error: 'token invalid' })  
