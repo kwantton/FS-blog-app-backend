@@ -1,7 +1,9 @@
 const logger = require('./logger')
 const User = require('../models/user') // at 4.22
 const Blog = require('../models/blog') // at 4.22. NOTE! If you try to use json web token here, AND use the jwt.verify here, it will instantly say "error: token invalid", unless you somehow magically succeed in logging in as a valid user when accessing /api/blogs etc! Tried that... didn't work - so the jwt side remains in /controllers/blogs.js as of now at least.
+const jwt = require('jsonwebtoken') // BUUT for real life, that's not a problem. Model solution uses jwt here..
 const { request } = require('../app')
+
 
 const requestLogger = (request, response, next) => {
   logger.info('Method:', request.method)
@@ -20,11 +22,22 @@ const tokenExtractor = (request, response, next) => {  // moved here as per 4.20
   next() // ok apparently - the idea is: call "next" middleware in any case, whether authorization is ok or not.
 }
 
+const getTokenFrom = request => { // model solution
+  const authorization = request.get('authorization')
+  if (authorization && authorization.startsWith('Bearer ')) {
+    return authorization.replace('Bearer ', '')
+  }
+  return null
+}
+
 const userExtractor = async (request, response, next) => {    // 4.22. I hope the async works???
   //console.log("request.token:", request.token) // WORKS! I can't copy-paste here the jwt.verify from controllers/blogs, BECAUSE: THE PROBLEM WITH jwt (jason web token): jwt will instantly result in "error: token invalid" for all of the /api/blogs urls unless you have managed to magically log in BEFORE going there, which is atm impossible, since this middleware is automatically called (as a designated middleware to /api/blogs) to those urls
   //console.log("request.body", request.body) // body
   //console.log("Hello from userExtractor (middleware)!")
   
+  const token = getTokenFrom(request)
+  const decodedToken = jwt.verify(token, process.env.SECRET) // in backend-only tests, this will cause "token invalid" for /api/blogs -paths, unless you've logged in first
+
   /** DELETE */
   if (request.method === "DELETE") {
   //console.log("DELETE: request.url (the url of the blog to delete", request.url) // empty
@@ -58,11 +71,15 @@ const userExtractor = async (request, response, next) => {    // 4.22. I hope th
   if(!body) {
     response.status(400).send({ error: `the blog you're trying to create has no body - bad request` })
   }
-  const userId = body.userId.toString() // I looked at the request to see this included there, nice way to check its existence
+  
+  //const userId = body.userId.toString() // works ONLY IF userID is provided in tests!! old, obsolete, bad idea! I looked at the request to see this included there, nice way to check its existence
+  //const user = await User.findById(userId) //old obsolete, is based on previous row, so that's why
+  const user = await User.findById(decodedToken.id)
+
   //console.log("request:", request)
   //console.log("body:", body)
   //console.log("userId:", userId)
-  const user = await User.findById(userId)
+  
   request.user = user // this puts the new "user" property to the "request" object, so it can be used in ../controllers/blogs.js later! See app.js also, as that specifies where this middleware can be used, and at what point!
 }
 next() // btw: the method can also be "GET", hence it's especially important to put next() here in the end
