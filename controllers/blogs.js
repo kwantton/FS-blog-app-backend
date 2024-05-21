@@ -23,39 +23,47 @@ blogsRouter.get('/:id', (request, response, next) => {
 
 blogsRouter.post('/', async (request, response) => {
   const body = request.body
+  /*
   console.log("request.token:", request.token) // ok - now uses the request.token (middleware tokenExtractor)
   console.log("process.env.SECRET:", process.env.SECRET)
   console.log("are the token (above) and process.env.SECRET (above) triple equal:", request.token === process.env.SECRET) // IF you're using requests/creating_new_blog.rest OR postman, it doesn't matter if the process.env.SECRET is correct (=matching to the one you send) - the only thing that matters is whether the one you send in the header matches to the one that the user gets upon login! c:
+  */
+
   // ^^ they are equal - so the problem is something else
   // THE PROBLEM WAS: nodemon c: - you have to (1) sign in with user x, then copy the token from the response (2) copy-paste that to
   // .env SECRET, then (3) copy-paste that in the Authorization: Bearer -header, AND NOT SAVE THROUGHOUT this or otherwise the session
   // will be messed up c:
   // For example, as soon as I save this file (blog.js), nodemon will take over and restart the server -> no longer signed in -> token fails.
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this checks if the two are equal, like the console.log above does
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)  // this DOES NOT check if the two are equal, it apparently just uses the SECRET to somehow verify the token. So .env.SECRET does NOT have to equal it c:
   //console.log("decodedToken:", decodedToken)
   if (!decodedToken.id) {    
     return response.status(401).json({ error: 'token invalid' })  
   }  
   // const user = await User.findById(decodedToken.id) // OLD - now you can use instead the request.user, thanks to the middleware userExtractor
   const user = request.user // !!!! NB! REMEMBER! you had forgotten to await in the middleware side -> awaiting here worked too! SO that's a possibility c:
+  
+  /**
   console.log("body:", body)
   console.log("user:", user)
+   */
 
   // const user = await User.findById(body.userId) // this was used before token authentication was taken into use for posting new blogs https://fullstackopen.com/en/part4/user_administration
   // const users = await User.find({}) // as per 4.17. !!! if you try "User.findById({})" IT WILL BREAK THE FUNCTIONALITY OF CREATING A NEW BLOG. HOW? NO IDEA.
   // const firstUser = users[0] // as per 4.17
   
-  let likes
+  /** 
+  let likes // extra, shouldn't be needed.
   if(!body.likes) {
     likes = 0
     } else {
       likes = body.likes
     }
+  */
 
   const blog = new Blog({
     title: body.title,
-    likes: likes,
+    likes: body.likes,
     url: body.url,
     author: body.author,
     user: user.id.toString() // this would be firstUser.id as per 4.17 which requested to choose any user (the first one in this case). That, of course, makes no sense IRL! https://fullstackopen.com/en/part4/user_administration
