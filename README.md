@@ -1,0 +1,3 @@
+NOTE! I forgot to change repo after 4.23 (the last task of part4), so here's the last actual commit of part 4:
+https://github.com/kwantton/FS-blog-app-backend/tree/6e4beae1b6629a9d7897dc3a1afd89bf60953a63
+sorry...
